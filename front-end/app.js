@@ -136,6 +136,33 @@ addBtn.onclick = () => {
   currentNoteIndex = -1;
 };
 
+
+function formatAIResponse(text) {
+  // Escape HTML
+  text = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  // Code blocks (```code```)
+  text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+
+  // Inline code (`code`)
+  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Bold (**bold**)
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // Italics (_italic_)
+  text = text.replace(/_(.*?)_/g, '<em>$1</em>');
+
+  // Bullet points
+  text = text.replace(/^- (.*)$/gm, '<li>$1</li>');
+  text = text.replace(/<li>(.*?)<\/li>/g, '<ul>$&</ul>');
+
+  // Paragraphs (convert double newlines to <p>)
+  text = text.split('\n\n').map(p => `<p>${p}</p>`).join('');
+
+  return text;
+}
+
 askBtn.onclick = async () => {
   const note = notes[currentNoteIndex];
   const question = questionInput.value;
