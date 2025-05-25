@@ -15,7 +15,7 @@ const toggleSidebar = document.getElementById('toggle-sidebar');
 const deleteBtn = document.getElementById('delete-note');
 const logoutBtn = document.getElementById('logout-btn');
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = 'https://askvault.onrender.com';
 
 function getToken() {
   return localStorage.getItem('token');
