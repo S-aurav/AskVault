@@ -84,7 +84,148 @@ async function updateNote(id, title, content) {
   renderNotes();
 }
 
+async function deleteNote(id) {
+  await fetch(`${BASE_URL}/api/notes/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${getToken()}`
+    }
+  });
 
+  notes = notes.filter(note => note._id !== id);
+  renderNotes();
+}
+
+function renderNotes() {
+  noteList.innerHTML = '';
+  notes.forEach((note, idx) => {
+    const li = document.createElement('li');
+    li.textContent = note.title || `Note ${idx + 1}`;
+    li.onclick = () => loadNote(idx);
+    noteList.appendChild(li);
+  });
+}
+
+function loadNote(index) {
+  const note = notes[index];
+  if (!note) return;
+  titleInput.value = note.title;
+  contentInput.value = note.content;
+  currentNoteIndex = index;
+}
+
+saveBtn.onclick = async () => {
+  const title = titleInput.value;
+  const content = contentInput.value;
+
+  if (currentNoteIndex >= 0) {
+    const note = notes[currentNoteIndex];
+    await updateNote(note._id, title, content);
+  } else {
+    await createNote(title, content);
+  }
+
+  currentNoteIndex = -1;
+  titleInput.value = '';
+  contentInput.value = '';
+};
+
+addBtn.onclick = () => {
+  titleInput.value = '';
+  contentInput.value = '';
+  currentNoteIndex = -1;
+};
+
+askBtn.onclick = async () => {
+  const note = notes[currentNoteIndex];
+  const question = questionInput.value;
+
+  if (!note || !question) {
+    alert('Please select a note and enter a question.');
+    return;
+  }
+
+  answerDiv.textContent = 'Thinking...';
+
+  try {
+    const res = await fetch(`${BASE_URL}/api/ai/ask`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      },
+      body: JSON.stringify({
+        note: `${note.title}\n\n${note.content}`,
+        question
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok) {
+      answerDiv.innerHTML = formatAIResponse(data.answer);
+    } else {
+      answerDiv.textContent = data.message || 'Error getting AI response.';
+    }
+  } catch (err) {
+    answerDiv.textContent = 'Something went wrong while contacting AI.';
+    console.error(err);
+  }
+};
+
+toggleSidebar.onclick = () => {
+  sidebar.classList.toggle('open');
+};
+
+themeToggle.onclick = () => {
+  document.body.classList.toggle('dark');
+  themeToggle.textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+  localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+};
+
+if (localStorage.getItem('theme') === 'dark') {
+  document.body.classList.add('dark');
+  themeToggle.textContent = '☀️';
+}
+
+deleteBtn.onclick = async () => {
+  if (currentNoteIndex < 0) {
+    alert('No note selected to delete.');
+    return;
+  }
+
+  const noteToDelete = notes[currentNoteIndex];
+
+  if (!noteToDelete._id) {
+    
+    notes.splice(currentNoteIndex, 1);
+    localStorage.setItem('notes', JSON.stringify(notes));
+    currentNoteIndex = -1;
+    renderNotes();
+    titleInput.value = '';
+    contentInput.value = '';
+    return;
+  }
+
+  const confirmed = confirm(`Are you sure you want to delete "${noteToDelete.title}"?`);
+  if (!confirmed) return;
+
+  const result = await deleteNote(noteToDelete._id);
+  if (result && result.success) {
+    notes.splice(currentNoteIndex, 1);
+    currentNoteIndex = -1;
+    renderNotes();
+    titleInput.value = '';
+    contentInput.value = '';
+  } else {
+    alert(result.message || 'Failed to delete the note');
+  }
+};
+
+logoutBtn.onclick = () => {
+  localStorage.removeItem('token');
+  alert('Logged out successfully!');
+  window.location.href = 'login.html'; 
+};
 
 
 // Init
