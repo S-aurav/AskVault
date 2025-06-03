@@ -9,7 +9,7 @@ AskVault is a modern, secure, and intelligent note-taking web application that a
 - 🔗 **Frontend:** [https://ask-vault.vercel.app](https://ask-vault.vercel.app)
 - 🔗 **Backend API:** [https://askvault.onrender.com](https://askvault.onrender.com)
 
-> Make sure to **sign up** before logging in and creating notes.
+> Make sure to **sign up** before logging in and creating notes
 
 ---
 
